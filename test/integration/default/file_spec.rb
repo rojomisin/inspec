@@ -192,4 +192,16 @@ if os.windows?
     # Only works on Windows 2012 R2
     its('file_version') { should eq '6.3.9600.17415' }
   end
+
+  # read the owner of a file
+  describe directory('C:/opscode/chef') do
+    its('owner') { should cmp 'NT AUTHORITY\SYSTEM' }
+    it { should be_owned_by 'NT AUTHORITY\SYSTEM' }
+  end
+
+  # verifies if a specific user has access to a file
+  describe directory('C:/opscode/chef') do
+    it { should be_readable.by_user('vagrant') }
+    it { should be_writable.by_user('vagrant') }
+  end
 end
