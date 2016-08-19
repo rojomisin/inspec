@@ -358,6 +358,24 @@ class InspecRspecCli < InspecRspecJson # rubocop:disable Metrics/ClassLength
     end
   end
 
+  def print_tests
+    control_result = @current_control[:results]
+    title = control_result[0][:code_desc].split[0..1].join(' ')
+    puts '  ' + title
+    control_result.each do |test|
+      control_id = ''
+      test_result = test[:code_desc].split[2..-1].join(' ')
+      status_indicator = test[:status_type]
+      print_line(
+        color:      @colors[status_indicator] || '',
+        indicator:  @indicators['empty'] + @indicators[status_indicator] || @indicators['unknown'],
+        summary:    format_lines(test_result, @indicators['empty']),
+        id:         control_id,
+        profile:    @current_control[:profile_id],
+      )
+    end
+  end
+
   def flush_current_control
     return if @current_control.nil?
 
@@ -370,17 +388,19 @@ class InspecRspecCli < InspecRspecJson # rubocop:disable Metrics/ClassLength
 
     control_id = @current_control[:id].to_s
     control_id += ': '
-    control_id = '' if control_id.start_with? '(generated from '
+    if control_id.start_with? '(generated from '
+      print_tests
+    else
+      print_line(
+        color:      @colors[summary_indicator] || '',
+        indicator:  @indicators[summary_indicator] || @indicators['unknown'],
+        summary:    format_lines(summary, @indicators['empty']),
+        id:         control_id,
+        profile:    @current_control[:profile_id],
+      )
 
-    print_line(
-      color:      @colors[summary_indicator] || '',
-      indicator:  @indicators[summary_indicator] || @indicators['unknown'],
-      summary:    format_lines(summary, @indicators['empty']),
-      id:         control_id,
-      profile:    @current_control[:profile_id],
-    )
-
-    print_fails_and_skips(fails + skips, @colors[summary_indicator] || '')
+      print_fails_and_skips(fails + skips, @colors[summary_indicator] || '')
+    end
   end
 
   def print_target(before, after)
